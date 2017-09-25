@@ -11,6 +11,15 @@ def main():
 	def static_file_request(filepath):
 		return bottle.static_file(filepath, root="/website/static_file/")
 
+	def kill():
+		pass
+
+	def vote():
+		pass
+
+	def perform():
+		pass
+
 	bottle.run(host="localhost", port=8000, debug=True)
 
 if __name__ == "__main__":
