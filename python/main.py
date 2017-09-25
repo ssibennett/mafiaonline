@@ -5,7 +5,7 @@ import bottle
 def main():
 	@bottle.route("/")
 	def index():
-		return bottle.template("<h1>Index</h1>")
+		return "<h1>Index</h1>"
 
 	@bottle.route("/static_file/<filepath:path>")
 	def static_file_request(filepath):
