@@ -3,6 +3,8 @@
 import bottle
 
 def main():
+	bottle.TEMPLATE_PATH.append("../website/")
+
 	@bottle.route("/")
 	def index():
 		print("\nIndex page requested")
@@ -13,6 +15,10 @@ def main():
 		print("\nstatic_file/{} requested".format(filepath))
 		return bottle.static_file(filepath, root="../website/static_file")
 
+	@bottle.route("/default")
+	def default():
+		return bottle.static_file("game.html", root="../website")
+
 	def kill():
 		pass
 
@@ -21,6 +27,11 @@ def main():
 
 	def perform():
 		pass
+
+	# Tester
+	@bottle.route("/greet/<name>")
+	def greet(name):
+		return bottle.template("greet(test)", name=name)
 
 	bottle.run(host="localhost", port=8000, debug=True)
 
