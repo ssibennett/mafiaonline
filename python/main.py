@@ -5,11 +5,13 @@ import bottle
 def main():
 	@bottle.route("/")
 	def index():
+		print("\nIndex page requested")
 		return "<h1>Index</h1>"
 
 	@bottle.route("/static_file/<filepath:path>")
 	def static_file_request(filepath):
-		return bottle.static_file(filepath, root="/website/static_file/")
+		print("\nstatic_file/{} requested".format(filepath))
+		return bottle.static_file(filepath, root="../website/static_file")
 
 	def kill():
 		pass
