@@ -19,9 +19,6 @@ def main():
 	def default():
 		return bottle.static_file("game.html", root="../website")
 
-	def kill():
-		pass
-
 	def vote():
 		pass
 

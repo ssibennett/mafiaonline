@@ -1,0 +1,5 @@
+HTML developers, hi. I'm Hyunjoon Jo, the leader of this club.
+
+I have very important announcement about making html files: save file names as "<name>.tpl" instead of "<name>.html". This is very important. Although I will explain later, you must save file names with .tpl postfix in order to take data from users.
+
+Thank you. Have fun!
