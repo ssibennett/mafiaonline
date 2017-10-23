@@ -3,6 +3,8 @@
 import bottle
 
 def main():
+    rooms = []
+
 	bottle.TEMPLATE_PATH.append("../website/")
 
 	@bottle.route("/")
@@ -17,13 +19,25 @@ def main():
 
 	@bottle.route("/default")
 	def default():
+        if bottle.request.get_cookie("visited") != "true":
+            if len(rooms) == 0 or len(rooms[-1]) == 5:
+                # rooms.append([ <IP address> ])
+            else:
+                # rooms[-1].append( <IP address> )
+
 		return bottle.static_file("game.html", root="../website")
 
 	def vote():
-		pass
+		if bottle.request.get_cookie("visited") == "true":
+            # return bottle.static_file("game.html", root="../website")
+
+        return "<h1>Who the heck are you?</h1>"
 
 	def perform():
-		pass
+		if bottle.request.get_cookie("visited") == "true":
+            # return bottle.static_file("game.html", root="../website")
+
+        return "<h1>Who the heck are you?</h1>"
 
 	# Tester
 	@bottle.route("/greet/<name>")
