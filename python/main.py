@@ -10,7 +10,7 @@ def main():
 	@bottle.route("/")
 	def index():
 		print("\nIndex page requested")
-		return "<h1>Index</h1>"
+		return bottle.template("index")
 
 	@bottle.route("/static_file/<filepath:path>")
 	def static_file_request(filepath):
@@ -25,19 +25,23 @@ def main():
             else:
                 # rooms[-1].append( <IP address> )
 
-		return bottle.static_file("game.html", root="../website")
+		return bottle.template("game")
 
 	def vote():
 		if bottle.request.get_cookie("visited") == "true":
-            # return bottle.static_file("game.html", root="../website")
+            # return bottle.template("game")
 
         return "<h1>Who the heck are you?</h1>"
 
 	def perform():
 		if bottle.request.get_cookie("visited") == "true":
-            # return bottle.static_file("game.html", root="../website")
+            # return bottle.template("game")
 
         return "<h1>Who the heck are you?</h1>"
+
+    @bottle.route("/dead")
+    def dead():
+        return bottle.template("dead")
 
 	# Tester
 	@bottle.route("/greet/<name>")
