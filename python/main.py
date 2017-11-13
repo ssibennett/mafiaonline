@@ -1,54 +1,62 @@
 # Bottle Python Web Framework
 
+"""
+~~~.tpl files are template files that python will change to HTML file.
+
+@bottle.route("/something")     ->     This code sends the return value
+def ~~~(~~~):                   ->     of this function when "/something"
+    return ~~~                  ->     is requested.
+
+
+"""
+
 import bottle
+import uuid
 
+# User class
+class User:
+    __init__(self, job):
+
+
+# main function
 def main():
-    rooms = []
+    games = []
 
-	bottle.TEMPLATE_PATH.append("../website/")
+    bottle.TEMPLATE_PATH.append("../website/")
 
-	@bottle.route("/")
-	def index():
-		print("\nIndex page requested")
-		return bottle.template("index")
+    # extra files linked in HTML(tpl) files
+    @bottle.route("/static_file/<filepath:path>")
+    def static_file_request(filepath):
+        print("\nstatic_file/{} requested".format(filepath))
+        return bottle.static_file(filepath, root="../website/static_file")
 
-	@bottle.route("/static_file/<filepath:path>")
-	def static_file_request(filepath):
-		print("\nstatic_file/{} requested".format(filepath))
-		return bottle.static_file(filepath, root="../website/static_file")
+    # blank useless page for testing
+    @bottle.route("/")
+    def index():
+        print("\nIndex page requested")
+        return bottle.template("index")
 
-	@bottle.route("/default")
-	def default():
-        if bottle.request.get_cookie("visited") != "true":
-            if len(rooms) == 0 or len(rooms[-1]) == 5:
-                # rooms.append([ <IP address> ])
-            else:
-                # rooms[-1].append( <IP address> )
+    # daytime - people vote
+    @bottle.route("/vote")
+    def vote():
+        return bottle.template("vote")
 
-		return bottle.template("game")
+    # loading
+    @bottle.route("/queue")
+    def queue():
+        return bottle.template("queue")
 
-	def vote():
-		if bottle.request.get_cookie("visited") == "true":
-            # return bottle.template("game")
+    # action (mafia - kill, doctor - save, police - accuse)
+    @bottle.route("/action")
+    def perform():
+        return bottle.template("action")
 
-        return "<h1>Who the heck are you?</h1>"
-
-	def perform():
-		if bottle.request.get_cookie("visited") == "true":
-            # return bottle.template("game")
-
-        return "<h1>Who the heck are you?</h1>"
-
+    # dead - not allowed to chat, but allowed to read others chat
     @bottle.route("/dead")
     def dead():
         return bottle.template("dead")
 
-	# Tester
-	@bottle.route("/greet/<name>")
-	def greet(name):
-		return bottle.template("greet(test)", name=name)
-
-	bottle.run(host="localhost", port=8000, debug=True)
+    bottle.run(host="localhost", port=8000, debug=True)
 
 if __name__ == "__main__":
-	main()
+    main()

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -23,8 +22,5 @@
     <p>Citizens can vote, and execute all the mafias to win</p>
     <p>The person who gets the most votes, they get executed</p>
     <p>You can still chat with the dead when you're dead btw</p>
-    <p>Shoutout to Matthew Jo</p>
-    <p>NOOOOO don't delete it</p>
-    <p>I love yu Matthew</p>
   </body>
 </html>
