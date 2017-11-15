@@ -14,7 +14,7 @@ TODO:
 
 import bottle
 import uuid
-import asyncio
+import _thread
 
 # User class
 class User:
@@ -23,7 +23,7 @@ class User:
             raise ValueError("Invalid id.")
 
         self.__id = id
-        self.__mutex = asyncio.Lock()
+        self.__mutex = _thread.allocate_lock()
         self.__vote = 0
         self.__life = True
         self.__room = None
@@ -32,9 +32,8 @@ class User:
         self.__room = room
 
     def vote(self):
-        self.__mutex.acquire()
-        self.__vote += 1
-        self.__mutex.release()
+        with self.__mutex:
+            self.__vote += 1
 
     def get_vote(self):
         return self.__vote
@@ -86,6 +85,7 @@ class Room:
 
 waiting_ids = []
 ids = set()
+mutex = _thread.allocate_lock()
 
 # main function
 def main():
@@ -100,7 +100,7 @@ def main():
     # initial page
     @bottle.route("/")
     def index():
-        global waiting_ids, ids
+        global waiting_ids, ids, mutex
 
         print("\nIndex page requested")
 
@@ -108,17 +108,21 @@ def main():
         bottle.response.set_cookie("id", str(id))
         print("\nThis user's id is {}.".format(str(id)))
 
-        waiting_ids.append(id)
+        with mutex:
+            waiting_ids.append(id)
 
-        if len(waiting_ids) == 5:
-            room = Room(waiting_ids)
-            ids.update(waiting_ids)
-            waiting_ids = []
-            print("\nWaiting list is full! A room is made for the waiting ids.")
+            if len(waiting_ids) == 5:
+                room = Room(waiting_ids)
+                ids.update(waiting_ids)
+                waiting_ids = []
+                print("\nWaiting list is full! A room is made for the waiting ids.")
 
-        print("\nWaiting ids: {}\nids: {}".format(waiting_ids, ids))
+            print("\nWaiting ids: {}\nids: {}".format(waiting_ids, ids))
 
-        return bottle.template("index")
+        print("\nReleased mutex")
+        response = bottle.template("index")
+        print("\nGot a response:\n{}".format(response))
+        return response
 
     # daytime - page where people vote
     @bottle.route("/vote")
