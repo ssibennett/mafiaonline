@@ -34,8 +34,8 @@
            <button type="button" class="btn btn-primary" style="cursor: pointer;">submit</button>
         </div>
       </div>
-          <!-- <div class="col-md-3 mt-1"><h2>You are ( )</h2> </div>
-          <div class="col-md-3 mt-1 offset-md-8"><h2>You are ( )</h2> </div> -->
+          <div class="col-md-3 mt-1"><h2>You are ( )</h2></div>
+          <div class="col-md-3 mt-1 offset-md-8"><h2>You are ( )</h2></div>
       </div>
 
 
