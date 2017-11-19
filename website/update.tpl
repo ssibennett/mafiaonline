@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <title>Mafia game</title>
@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
   </head>
   <body>
-    
+
     <!--custom section-->
     <div class="container">
       <h1 class="text-center">Mafia game</h1>
@@ -24,7 +24,7 @@
         <div class="col-12 col-md-8">
         <div class="card mt-3" style="height : 400%;">
            <div class="card-bloc">
-          </div> 
+          </div>
         </div>
         <div class="form-group mt-1">
             <input class="form-control" id="exampleFormControlTextarea1" rows="1"></input>
@@ -34,11 +34,11 @@
            <button type="button" class="btn btn-primary" style="cursor: pointer;">submit</button>
         </div>
       </div>
-          <!-- <div class="col-md-3 mt-1"><h2>You are ( )<h2> </div>
-          <div class="col-md-3 mt-1 offset-md-8"><h2>You are ( )<h2> </div> -->
+          <!-- <div class="col-md-3 mt-1"><h2>You are ( )</h2> </div>
+          <div class="col-md-3 mt-1 offset-md-8"><h2>You are ( )</h2> </div> -->
       </div>
-      
-      
+
+
     </div>
     <!--end-->
 
