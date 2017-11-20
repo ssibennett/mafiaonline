@@ -20,9 +20,9 @@
         <a class="nav-item nav-link" href="#">Vote</a>
         <a class="nav-item nav-link" href="#">Night</a>
       </nav>
-      <div class="row">
+      <div class="row" style="height : 65em;">
         <div class="col-12 col-md-8">
-        <div class="card mt-3" style="height : 400%;">
+        <div class="card mt-3" style="height : 80%;">
            <div class="card-bloc">
           </div>
         </div>
@@ -34,11 +34,9 @@
            <button type="button" class="btn btn-primary" style="cursor: pointer;">submit</button>
         </div>
       </div>
-          <div class="col-md-3 mt-1"><h2>You are ( )</h2></div>
-          <div class="col-md-3 mt-1 offset-md-8"><h2>You are ( )</h2></div>
+          <div class="col-md-3 mt-1"><h2>You are ( )</h2><h2>You are ( )</h2></div>
+          	<div class="col-md-12 mt-1"> <h2> fda <h2> </div>
       </div>
-
-
     </div>
     <!--end-->
 
