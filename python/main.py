@@ -87,78 +87,74 @@ waiting_ids = []
 ids = set()
 mutex = _thread.allocate_lock()
 
-# main function
-def main():
-    bottle.TEMPLATE_PATH.append("../website/")
+bottle.TEMPLATE_PATH.append("../website/")
 
-    # extra files linked in HTML(tpl) files
-    @bottle.route("/static_file/<filepath:path>")
-    def static_file_request(filepath):
-        print("\nstatic_file/{} requested".format(filepath))
-        return bottle.static_file(filepath, root="../website/static_file")
+# extra files linked in HTML(tpl) files
+@bottle.route("/static_file/<filepath:path>")
+def static_file_request(filepath):
+    print("\nstatic_file/{} requested".format(filepath))
+    return bottle.static_file(filepath, root="../website/static_file")
 
-    # initial page
-    @bottle.route("/")
-    def index():
-        global waiting_ids, ids, mutex
+# initial page
+@bottle.route("/")
+def index():
+    global waiting_ids, ids, mutex
 
-        print("\nIndex page requested")
+    print("\nIndex page requested")
 
-        id = uuid.uuid4()
-        bottle.response.set_cookie("id", str(id))
-        print("\nThis user's id is {}.".format(str(id)))
+    id = uuid.uuid4()
+    bottle.response.set_cookie("id", str(id))
+    print("\nThis user's id is {}.".format(str(id)))
 
-        with mutex:
-            waiting_ids.append(id)
+    with mutex:
+        waiting_ids.append(id)
 
-            if len(waiting_ids) == 5:
-                room = Room(waiting_ids)
-                ids.update(waiting_ids)
-                waiting_ids = []
-                print("\nWaiting list is full! A room is made for the waiting ids.")
+        if len(waiting_ids) == 5:
+            room = Room(waiting_ids)
+            ids.update(waiting_ids)
+            waiting_ids = []
+            print("\nWaiting list is full! A room is made for the waiting ids.")
 
-            print("\nWaiting ids: {}\nids: {}".format(waiting_ids, ids))
+        print("\nWaiting ids: {}\nids: {}".format(waiting_ids, ids))
 
-        print("\nReleased mutex")
-        response = bottle.template("index")
-        print("\nGot a response:\n{}".format(response))
-        return response
+    print("\nReleased mutex")
+    response = bottle.template("index")
+    print("\nGot a response:\n{}".format(response))
+    return response
 
-    # daytime - page where people vote
-    @bottle.route("/vote")
-    def vote():
-        return bottle.template("vote")
+# daytime - page where people vote
+@bottle.route("/vote")
+def vote():
+    return bottle.template("vote")
 
-    # who did you vote?
-    """
-    @bottle.route("/vote", method="POST")
-    def vote_post():
-        room = # something
-        person = bottle.request.forms.get("person")
+# who did you vote?
+"""
+@bottle.route("/vote", method="POST")
+def vote_post():
+    room = # something
+    person = bottle.request.forms.get("person")
 
-        try:
-            room.vote(int(person))
-        except ValueError as error:
-            print(error)
-        # exception when "person" is not number
-    """
+    try:
+        room.vote(int(person))
+    except ValueError as error:
+        print(error)
+    # exception when "person" is not number
+"""
 
-    # loading
-    @bottle.route("/queue")
-    def queue():
-        return bottle.template("queue")
+# loading
+@bottle.route("/queue")
+def queue():
+    return bottle.template("queue")
 
-    # action (mafia - kill, doctor - save, police - accuse)
-    @bottle.route("/action")
-    def action():
-        return bottle.template("action")
+# action (mafia - kill, doctor - save, police - accuse)
+@bottle.route("/action")
+def action():
+    return bottle.template("action")
 
-    # dead - not allowed to chat, but allowed to read others chat
-    @bottle.route("/dead")
-    def dead():
-        return bottle.template("dead")
-
-    bottle.run(host="localhost", port=8000, debug=True)
+# dead - not allowed to chat, but allowed to read others chat
+@bottle.route("/dead")
+def dead():
+    return bottle.template("dead")
 
 if __name__ == "__main__":
-    main()
+    bottle.run(host="localhost", port=8000, debug=True)
