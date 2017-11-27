@@ -84,7 +84,7 @@ class Room:
             user.reset_vote()
 
 waiting_ids = []
-ids = set()
+ids = {} # { uuid.UUID : (Room, index) }
 mutex = _thread.allocate_lock()
 
 def app():
@@ -112,21 +112,39 @@ def app():
 
             if len(waiting_ids) == 5:
                 room = Room(waiting_ids)
-                ids.update(waiting_ids)
+                for i in range(5):
+                    ids[waiting_ids[i]] = (room, i)
                 waiting_ids = []
                 print("\nWaiting list is full! A room is made for the waiting ids.")
 
             print("\nWaiting ids: {}\nids: {}".format(waiting_ids, ids))
 
         print("\nReleased mutex")
-        response = bottle.template("index")
+        response = bottle.template("queue")
         print("\nGot a response:\n{}".format(response))
         return response
 
-    # daytime - page where people vote
+    # daytime - chatting
+    @bottle.route("/day")
+    def day():
+        print("\nDaytime page requested")
+
+        str_id = bottle.request.cookies.get("id")
+        print("\nThis user's id is {}.".format(str_id))
+        print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
+
+        return bottle.template("day", index=ids[uuid.UUID(str_id)][1])
+
+    # vote - page where people vote
     @bottle.route("/vote")
     def vote():
-        return bottle.template("vote")
+        print("\nVoting page requested")
+
+        str_id = bottle.request.cookies.get("id")
+        print("\nThis user's id is {}.".format(str_id))
+        print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
+
+        return bottle.template("vote", index=ids[uuid.UUID(str_id)][1])
 
     # who did you vote?
     """
@@ -142,20 +160,27 @@ def app():
         # exception when "person" is not number
     """
 
-    # loading
-    @bottle.route("/queue")
-    def queue():
-        return bottle.template("queue")
+    # night (mafia - kill, doctor - save, police - accuse, civilian - nothing)
+    @bottle.route("/night")
+    def night():
+        print("\nNighttime page requested")
 
-    # action (mafia - kill, doctor - save, police - accuse)
-    @bottle.route("/action")
-    def action():
-        return bottle.template("action")
+        str_id = bottle.request.cookies.get("id")
+        print("\nThis user's id is {}.".format(str_id))
+        print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
+
+        return bottle.template("night", index=ids[uuid.UUID(str_id)][1])
 
     # dead - not allowed to chat, but allowed to read others chat
     @bottle.route("/dead")
     def dead():
-        return bottle.template("dead")
+        print("\nDead page requested")
+
+        str_id = bottle.request.cookies.get("id")
+        print("\nThis user's id is {}.".format(str_id))
+        print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
+
+        return bottle.template("dead", index=ids[uuid.UUID(str_id)][1])
 
 if __name__ == "__main__":
     app()
