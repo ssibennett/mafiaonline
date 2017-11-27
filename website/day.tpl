@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
      <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Lobster">
-    <style> body {background-color: #fffff0;} </style>
+      <style> body {background-color: #f0f8ff;} </style>
   </head>
   <body>
 
@@ -28,7 +28,7 @@
 
       <div class="row" style="height : 40em;">
         <div class="col-8 col-md-8">
-          <div class="card mt-3" style="height : 80%; overflow-y: scroll" >
+          <div class="card mt-3" style="height : 80%; overflow-y: scroll">
           </div>
           <div class="form-group mt-1">
             <input class="form-control" id="exampleFormControlTextarea1" rows="1"></input>
@@ -39,15 +39,14 @@
         </div>
 
         <div class="col-md-4 mt-3">
-          <h2 class="text-center" style="font-family : Lobster;">You are <span style="color : red; font-size : 1.25em;"> Mafia </span></h2>
-          <h2 class="text-center" style="font-family : Lobster; font-size: 1.5em"> Select To <span style="color : #8B6742; font-size : 1.25em;"> Vote </span> </h2>
+          <h2 class="text-center" style="font-family : Lobster;">You are <span style="color : red; font-size : 1.25em;"> Mafia </span></h2> 
           <div class="card mt-3" style="height : 80%;">
             <ul class="list-group list-group-flush text-center">
-              <li class="list-group-item"><button class="btn" style= "background-color : #d5c4a1;">PLAYER 1</button> </li>
-              <li class="list-group-item"><button class="btn" style= "background-color : #d5c4a1;">PLAYER 2</button></li>
-              <li class="list-group-item"><button class="btn" style= "background-color : #d5c4a1;">PLAYER 3</button></li>
-              <li class="list-group-item"><button class="btn" style= "background-color : #d5c4a1;">PLAYER 4</button></li>
-              <li class="list-group-item"><button class="btn" style= "background-color : #d5c4a1;">PLAYER 5</button></li>
+              <li class="list-group-item">PLAYER 1</li>
+              <li class="list-group-item">PLAYER 2</li>
+              <li class="list-group-item">PLAYER 3</li>
+              <li class="list-group-item">PLAYER 4</li>
+              <li class="list-group-item">PLAYER 5</li>
             </ul>
           </div>
         </div>

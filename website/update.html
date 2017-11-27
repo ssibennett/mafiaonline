@@ -8,6 +8,8 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+     <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Lobster">
   </head>
   <body>
 
@@ -15,28 +17,37 @@
     <div class="container">
       <h1 class="text-center">Mafia game</h1>
       <hr>
-      <nav class="nav nav-pills nav-justified">
-        <a class="nav-item nav-link active" href="#">Day</a>
-        <a class="nav-item nav-link" href="#">Vote</a>
-        <a class="nav-item nav-link" href="#">Night</a>
-      </nav>
-      <div class="row" style="height : 65em;">
-        <div class="col-12 col-md-8">
-        <div class="card mt-3" style="height : 80%;">
-           <div class="card-bloc">
+      <div class="container">
+        <div class="row font-weight-bold" style="font-size : 1.25em;">
+          <div class="col-sm text-center" style="color:#2a6aff;"> Day </div>
+          <div class="col-sm text-center" style="color:#98503C;"> Vote </div>
+          <div class="col-sm text-center" style="color:#000000;"> Night </div>
+        </div>
+      </div>
+
+      <div class="row" style="height : 40em;">
+        <div class="col-8 col-md-8">
+          <div class="card mt-3" style="height : 80%;">
+            <div class="card-bloc">
+            </div>
+          </div>
+          <div class="form-group mt-1">
+            <input class="form-control" id="exampleFormControlTextarea1" rows="1"></input>
+          </div>
+          <div class=text-right>
+            <button type="button" class="btn btn-primary" style="cursor: pointer;">submit</button>
           </div>
         </div>
-        <div class="form-group mt-1">
-            <input class="form-control" id="exampleFormControlTextarea1" rows="1"></input>
-        </div>
-        <div class=text-right>
-           <button type="button" class="btn btn-primary" style="cursor: pointer; padding: .375rem 1.15rem;">Note</button>
-           <button type="button" class="btn btn-primary" style="cursor: pointer;">submit</button>
+
+        <div class="col-md-4 mt-3">
+          <h2 class="text-center" style="font-family : Lobster;">You are <span style="color : red; font-size : 1.25em;"> Mafia </span></h2> 
+          <div class="card mt-3" style="height : 80%;">
+            <div class="card-bloc">
+            </div>
+          </div>
         </div>
       </div>
-          <div class="col-md-3 mt-1"><h2>You are ( )</h2><h2>You are ( )</h2></div>
-          	<div class="col-md-12 mt-1"> <h2> fda <h2> </div>
-      </div>
+
     </div>
     <!--end-->
 
