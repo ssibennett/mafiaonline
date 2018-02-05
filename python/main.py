@@ -14,174 +14,300 @@ TODO:
 
 import bottle
 import uuid
-import _thread
+import random
+import json
 
 # User class
 class User:
-    def __init__(self, id: uuid.UUID):
-        if not isinstance(id, uuid.UUID):
+    def __init__(self, id):
+        if not isinstance(id, str):
             raise ValueError("Invalid id.")
 
         self.__id = id
-        self.__mutex = _thread.allocate_lock()
-        self.__vote = 0
-        self.__life = True
         self.__room = None
+        self.__job = None
+        self.__vote = 0
+        self.__alive = True
 
     def enter(self, room):
         self.__room = room
 
-    def vote(self):
-        with self.__mutex:
-            self.__vote += 1
+    def getJob(self):
+        return self.__job
 
-    def get_vote(self):
+    def setJob(self, job):
+        self.__job = job
+
+    def vote(self):
+        self.__vote += 1
+
+    def getVote(self):
         return self.__vote
 
-    def reset_vote(self):
+    def resetVote(self):
         self.__vote = 0
 
     def die(self):
-        self.__life = False
+        self.__alive = False
 
-    def life(self):
-        return self.__life
+    def alive(self):
+        return self.__alive
 
 # Room class
 class Room:
-    def __init__(self, ids: list):
+    def __init__(self, ids):
         if not (isinstance(ids, list) and len(ids) == 5):
             raise ValueError("Invalid list of users.")
         for id in ids:
-            if not isinstance(id, uuid.UUID):
+            if not isinstance(id, str):
                 raise ValueError("Invalid list of users.")
 
         self.__users = [User(ids[i]) for i in range(5)]
-        for user in self.__users:
-            user.enter(self)
+        jobs = ["Mafia", "Police", "Doctor", "Citizen", "Citizen"]
+        random.shuffle(jobs)
+        for i in range(5):
+            self.__users[i].enter(self)
+            self.__users[i].setJob(jobs[i])
 
-    def user_at(self, index: int):
+        # messages storage
+        self.__msgRcvCount = 0
+        self.__msgRcvList = [False for _ in range(5)]
+        self.__msgBuffer = []
+        self.__msgFlush = []
+
+        # ready to vote
+        self.__voteReadyCount = 0
+        self.__voteReadyList = [False for _ in range(5)]
+
+        # maximum vote
+        self.__voteCount = 0
+        self.__maxVote = []
+
+        # dead
+        self.__dead = 0
+
+        # actions
+        self.__acts = {}
+
+    def userAt(self, index):
         return self.__users[index]
 
-    def vote(self, index: int):
+    def sendMsg(self, index, msg):
+        self.__msgBuffer.append([index, msg])
+
+    def rcvMsgJSON(self, index):
+        if self.__msgRcvCount == 0:
+            self.__msgFlush = self.__msgBuffer
+            self.__msgBuffer = []
+
+        if self.__msgRcvList[index]:
+            return "[]"
+        else:
+            self.__msgRcvCount += 1
+            self.__msgRcvList[index] = True
+
+            if self.__msgRcvCount == 5:
+                self.__msgRcvCount = 0
+                for i in range(5):
+                    self.__msgRcvList[i] = False
+
+            return json.dumps(self.__msgFlush, separators=(",", ":"))
+
+    def readyToVote(self, index):
+        if self.__voteReadyCount == 0:
+            for i in range(5):
+                self.__voteReadyList[index] = False
+
+        if not self.__voteReadyList[index]:
+            self.__voteReadyList[index] = True
+            self.__voteReadyCount += 1
+
+        if self.__voteReadyCount + self.__dead == 5:
+            self.__voteReadyCount = 0
+            return "0"
+        else: return "1"
+
+    def voteTo(self, index):
         self.__users[index].vote()
+        self.__voteCount += 1
 
-    def execute(self):
-        max_vote = 0
-        index = 0
+        if self.__voteCount + self.__dead == 5:
+            for i in range(5):
+                if len(self.__maxVote) == 0:
+                    self.__maxVote.append(i)
+                elif self.__users[self.__maxVote[0]].getVote() == self.__users[i].getVote():
+                    self.__maxVote.append(i)
+                elif self.__users[self.__maxVote[0]].getVote() < self.__users[i].getVote():
+                    self.__maxVote = [i]
 
-        for i in range(5):
-            if max_vote < self.__users[i].get_vote():
-                max_vote = self.__users[i].get_vote()
-                index = i
+            for index in self.__maxVote:
+                self.__users[i].die()
+                self.__dead += 1
 
-        self.__users[index].die()
+            self.__voteCount = 0
+            self.__maxVote = []
 
-        return index
+    def deadListJSON(self):
+        return json.dumps(self.__maxVote, separators=(",", ":"))
 
-    def reset_vote(self):
+    def resetVote(self):
         for user in self.__users:
-            user.reset_vote()
+            user.resetVote()
 
+    def act(self, index, target):
+        self.__acts[self.__users[index].getJob()] = target
+
+    def actResult(self, index):
+        if "Mafia" in self.__acts and "Police" in self.__acts and "Doctor" in self.__acts:
+            result = {}
+            mafia = self.__acts["Mafia"]
+            police = self.__acts["Police"]
+            doctor = self.__acts["Doctor"]
+
+            if mafia != doctor:
+                result["victim"] = mafia
+                self.__dead += 1
+            if self.__users[index].getJob() == "Police":
+                result["police"] = (self.__users[police].getJob() == "Mafia")
+
+            return json.dumps(result, separator=(",", ":"))
+        else:
+            return "1"
+
+# Set routing
 app = bottle.Bottle()
 
 waiting_ids = []
-ids = {} # { uuid.UUID : (Room, index) }
-mutex = _thread.allocate_lock()
+ids = {} # { str(uuid.UUID) : (Room, index) }
 
 bottle.TEMPLATE_PATH.append("../website/")
 
 # extra files linked in HTML(tpl) files
-@app.route("/static_file/<filepath:path>")
+@app.get("/static_file/<filepath:path>")
 def static_file_request(filepath):
-    print("\nstatic_file/{} requested".format(filepath))
+    print("static_file/{} requested".format(filepath))
     return bottle.static_file(filepath, root="../website/static_file")
+
+# JavaScript request
+@app.get("/script/<filepath:path>")
+def script_request(filepath):
+    print("script/{} requested".format(filepath))
+    id = bottle.request.cookies.get("id")
+    return bottle.template(
+        "script/{}".format(filepath),
+        index=("" if ids.get(id) == None else ids[id][1]),
+        job=("" if ids.get(id) == None else ids[id][0].userAt(ids[id][1]).getJob())
+    )
 
 # initial page
 @app.route("/")
 def index():
-    global waiting_ids, ids, mutex
+    global waiting_ids, ids
 
-    print("\nIndex page requested")
+    print("Index page requested")
 
-    id = uuid.uuid4()
-    bottle.response.set_cookie("id", str(id))
-    print("\nThis user's id is {}.".format(str(id)))
+    id = str(uuid.uuid4())
+    bottle.response.set_cookie("id", id)
+    print("\tID:", format(id))
 
-    with mutex:
-        waiting_ids.append(id)
+    waiting_ids.append(id)
 
-        if len(waiting_ids) == 5:
-            room = Room(waiting_ids)
-            for i in range(5):
-                ids[waiting_ids[i]] = (room, i)
-            waiting_ids = []
-            print("\nWaiting list is full! A room is made for the waiting ids.")
+    if len(waiting_ids) == 5:
+        room = Room(waiting_ids)
+        for i in range(5):
+            ids[waiting_ids[i]] = (room, i)
+        waiting_ids = []
+        print("\tWaiting list is full! A room is made for the waiting ids.")
 
-        print("\nWaiting ids: {}\nids: {}".format(waiting_ids, ids))
+    print("\tWaiting ids: {}\n\tids: {}".format(waiting_ids, ids))
 
-    print("\nReleased mutex")
-    response = bottle.template("queue")
-    print("\nGot a response:\n{}".format(response))
-    return response
+    return bottle.template("queue")
+
+# Ready to join the game?
+@app.post("/enterReady")
+def enterReady():
+    print("Enter Ready requested")
+
+    id = bottle.request.cookies.get("id")
+    print("\tID:", format(id))
+
+    if ids.get(id) == None and id in waiting_ids:
+        print("\tNot ready")
+        return "1"
+    elif ids.get(id) != None and id not in waiting_ids:
+        print("\tIndex:", format(ids[id][1]))
+        return "0"
+    else:
+        print("\tSomething went wrong in enterReady()")
+        return "2"
 
 # daytime - chatting
-@app.route("/day")
+@app.get("/day")
 def day():
-    print("\nDaytime page requested")
+    print("Daytime page requested")
 
-    str_id = bottle.request.cookies.get("id")
-    print("\nThis user's id is {}.".format(str_id))
-    print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
+    id = bottle.request.cookies.get("id")
+    print("\tID:", format(id))
+    print("\tIndex:", format(ids[id][1]))
 
-    return bottle.template("day", index=ids[uuid.UUID(str_id)][1])
+    return bottle.template("day")
+
+# chatting
+@app.post("/sendMsg")
+def sendMsg():
+    print("Message send requested")
+    msg = bottle.request.forms.get("msg")
+    id = bottle.request.cookies.get("id")
+
+    ids[id][0].sendMsg(ids[id][1], msg)
+    return "0"
+
+@app.post("/rcvMsg")
+def rcvMsg():
+    print("Message receive requested")
+    id = bottle.request.cookies.get("id")
+    result = ids[id][0].rcvMsgJSON(ids[id][1])
+    return result
 
 # vote - page where people vote
-@app.route("/vote")
-def vote():
-    print("\nVoting page requested")
-
-    str_id = bottle.request.cookies.get("id")
-    print("\nThis user's id is {}.".format(str_id))
-    print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
-
-    return bottle.template("vote", index=ids[uuid.UUID(str_id)][1])
+@app.post("/readyToVote")
+def readyToVote():
+    print("Vote ready requested")
+    id = bottle.request.cookies.get("id")
+    return ids[id][0].readyToVote(ids[id][1])
 
 # who did you vote?
-"""
-@bottle.route("/vote", method="POST")
-def vote_post():
-    room = # something
-    person = bottle.request.forms.get("person")
+@app.post("/voteTo")
+def voteTo():
+    player = int(bottle.request.forms.get("player"))
+    id = bottle.request.cookies.get("id")
 
-    try:
-        room.vote(int(person))
-    except ValueError as error:
-        print(error)
-    # exception when "person" is not number
-"""
+    if 1 <= player <= 5:
+        print("Voting for {}".format(player))
+        ids[id][0].voteTo(player)
+        return "0"
+    else:
+        return "1"
 
-# night (mafia - kill, doctor - save, police - accuse, civilian - nothing)
-@app.route("/night")
-def night():
-    print("\nNighttime page requested")
+# who's left?
+@app.post("/execute")
+def execute():
+    id = bottle.request.cookies.get("id")
+    return ids[id][0].deadListJSON()
 
-    str_id = bottle.request.cookies.get("id")
-    print("\nThis user's id is {}.".format(str_id))
-    print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
+# night (mafia - kill, doctor - save, police - investigate, civilian - nothing)
+@app.post("/act")
+def act():
+    print("\Action page requested")
+    id = bottle.request.cookies.get("id")
+    target = bottle.request.forms.get("target")
 
-    return bottle.template("night", index=ids[uuid.UUID(str_id)][1])
+    return "0"
 
-# dead - not allowed to chat, but allowed to read others chat
-@app.route("/dead")
-def dead():
-    print("\nDead page requested")
-
-    str_id = bottle.request.cookies.get("id")
-    print("\nThis user's id is {}.".format(str_id))
-    print("\nThis user's index is {}.".format(ids[uuid.UUID(str_id)][1]))
-
-    return bottle.template("dead", index=ids[uuid.UUID(str_id)][1])
+@app.post("/actResult")
+def actResult():
+    id = bottle.request.cookies.get("id")
+    return ids[id][0].actResult(ids[id][1])
 
 if __name__ == "__main__":
     app.run(host="localhost", port=8000, debug=True)
