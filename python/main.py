@@ -250,7 +250,7 @@ def day():
     print("\tID:", format(id))
     print("\tIndex:", format(ids[id][1]))
 
-    return bottle.template("day")
+    return bottle.template("main")
 
 # chatting
 @app.post("/sendMsg")

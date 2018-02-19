@@ -117,9 +117,10 @@ var MAFIA_ONLINE = {
           success: (data, status, xhr) => {
             switch (data) {
               case "0": // Ready to enter
+                // stop pinging
+                clearInterval(readyToVote);
                 // Load vote page
                 MAFIA_ONLINE.vote();
-
                 break;
               case "1": // Not ready
                 console.log("waiting...");
@@ -267,6 +268,7 @@ var MAFIA_ONLINE = {
                       alert("That person is a Mafia.");
                     }
 
+                    clearInterval(actResult);
                     MAFIA_ONLINE.day();
                   }
                 }
