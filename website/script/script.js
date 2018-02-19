@@ -50,7 +50,6 @@ var MAFIA_ONLINE = {
         data: {
           msg: msg
         },
-        async: false,
         success: (data, status, xhr) => {
           if (data == "0") {
             console.log("Success!!!");
@@ -81,7 +80,6 @@ var MAFIA_ONLINE = {
         method: "POST",
         url: "rcvMsg",
         dataType: "json",
-        async: false,
         success: (data, status, xhr) => {
           console.log("Successfully received messages.");
           for (var i = 0; i < data.length; i++) {
@@ -113,7 +111,6 @@ var MAFIA_ONLINE = {
         $.ajax({
           method: "POST",
           url: "readyToVote",
-          async: false,
           success: (data, status, xhr) => {
             switch (data) {
               case "0": // Ready to enter
@@ -161,7 +158,6 @@ var MAFIA_ONLINE = {
           data: {
             player: player
           },
-          async: false,
           success: (data, status, xhr) => {
             switch (data) {
               case "0":
@@ -171,7 +167,6 @@ var MAFIA_ONLINE = {
                   method: "POST",
                   url: "execute",
                   dataType: "json",
-                  async: false,
                   success: (data, status, xhr) => {
                     for (var i = 0; i < data.length; i++) {
                       MAFIA_ONLINE.alive[data[i]] = false;
@@ -238,7 +233,6 @@ var MAFIA_ONLINE = {
           data: {
             target: target
           },
-          async: false,
           success: (data, status, xhr) => {
             if (data != "0") {
               console.log("Error in action!");
@@ -250,7 +244,6 @@ var MAFIA_ONLINE = {
                 method: "POST",
                 url: "actResult",
                 dataType: "json",
-                async: false,
                 success: (data, status, xhr) => {
                   if (data === 1) {
                     console.log("Waiting for the result...");
