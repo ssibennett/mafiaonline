@@ -92,6 +92,18 @@ class Room:
     def userAt(self, index):
         return self.__users[index]
 
+    def getMsgRcvCount(self):
+        return self.__msgRcvCount
+
+    def getMsgRcvList(self):
+        return self.__msgRcvList
+
+    def getMsgBuffer(self):
+        return self.__msgBuffer
+
+    def getMsgFlush(self):
+        return self.__msgFlush
+
     def sendMsg(self, index, msg):
         self.__msgBuffer.append([index, msg])
 
@@ -259,14 +271,37 @@ def sendMsg():
     msg = bottle.request.forms.get("msg")
     id = bottle.request.cookies.get("id")
 
+    print("sendMsg called from room {} index {}.".format(ids[id][0], ids[id][1]))
+    print("Message receive count:", ids[id][0].getMsgRcvCount())
+    print("Message receive list:", ids[id][0].getMsgRcvList())
+    print("Message buffer:", ids[id][0].getMsgBuffer())
+    print("Message flush:", ids[id][0].getMsgFlush())
     ids[id][0].sendMsg(ids[id][1], msg)
+    print("Sent the following message:", msg)
+    print("Message receive count:", ids[id][0].getMsgRcvCount())
+    print("Message receive list:", ids[id][0].getMsgRcvList())
+    print("Message buffer:", ids[id][0].getMsgBuffer())
+    print("Message flush:", ids[id][0].getMsgFlush())
+    print()
     return "0"
 
 @app.post("/rcvMsg")
 def rcvMsg():
     print("Message receive requested")
     id = bottle.request.cookies.get("id")
-    result = ids[id][0].rcvMsgJSON(ids[id][1])
+
+    print("rcvMsg called from room {} index {}.".format(ids[id][0], ids[id][1]))
+    print("Message receive count:", ids[id][0].getMsgRcvCount())
+    print("Message receive list:", ids[id][0].getMsgRcvList())
+    print("Message buffer:", ids[id][0].getMsgBuffer())
+    print("Message flush:", ids[id][0].getMsgFlush())
+    result = ids[id][0].rcvMsgJSON(ids[id][1]) # <Room>.rcvMsgJSON(<Index>)
+    print("Received the following message:", result)
+    print("Message receive count:", ids[id][0].getMsgRcvCount())
+    print("Message receive list:", ids[id][0].getMsgRcvList())
+    print("Message buffer:", ids[id][0].getMsgBuffer())
+    print("Message flush:", ids[id][0].getMsgFlush())
+    print()
     return result
 
 # vote - page where people vote

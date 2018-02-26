@@ -23,6 +23,8 @@ var MAFIA_ONLINE = {
     return MAFIA_ONLINE.alive[MAFIA_ONLINE.INDEX];
   },
 
+  randTime: Math.floor(Math.random() * 750 + 750),
+
   day: function() {
     var rcvMsg;
 
@@ -74,7 +76,7 @@ var MAFIA_ONLINE = {
       MAFIA_ONLINE.$msg.attr("disabled", "disabled");
     }
 
-    // Receiving message every 50 ms
+    // Receiving message periodically
     rcvMsg = setInterval(function() {
       $.ajax({
         method: "POST",
@@ -101,12 +103,13 @@ var MAFIA_ONLINE = {
           }
         }
       });
-    }, 100);
+    }, MAFIA_ONLINE.randTime);
 
     // Ready for Voting
     function readyToVote() {
       MAFIA_ONLINE.$readyToVote.off();
 
+      // Ping
       var readyToVote = setInterval(function() {
         $.ajax({
           method: "POST",
@@ -127,7 +130,7 @@ var MAFIA_ONLINE = {
             }
           }
         });
-      }, 500);
+      }, MAFIA_ONLINE.randTime);
     }
 
     if (MAFIA_ONLINE.imAlive()) {
@@ -266,7 +269,7 @@ var MAFIA_ONLINE = {
                   }
                 }
               });
-            }, 100);
+            }, MAFIA_ONLINE.randTime);
           }
         });
       });
