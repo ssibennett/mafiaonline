@@ -23,7 +23,7 @@ var MAFIA_ONLINE = {
     return MAFIA_ONLINE.alive[MAFIA_ONLINE.INDEX];
   },
 
-  randTime: Math.floor(Math.random() * 750 + 750),
+  randTime: Math.floor(Math.random() * 750 + 1000),
 
   day: function() {
     var rcvMsg;

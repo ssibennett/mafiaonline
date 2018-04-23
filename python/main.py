@@ -78,6 +78,8 @@ class Room:
         # ready to vote
         self.__voteReadyCount = 0
         self.__voteReadyList = [False for _ in range(5)]
+        self.__voteReadyRcvedCount = 0
+        self.__voteReadyRcved = [False for _ in range(5)]
 
         # maximum vote
         self.__voteCount = 0
@@ -126,17 +128,25 @@ class Room:
             return json.dumps(self.__msgFlush, separators=(",", ":"))
 
     def readyToVote(self, index):
-        if self.__voteReadyCount == 0:
-            for i in range(5):
-                self.__voteReadyList[index] = False
-
-        if not self.__voteReadyList[index]:
-            self.__voteReadyList[index] = True
-            self.__voteReadyCount += 1
+        print("ready to vote: " + str(index))
+        if self.__voteReadyCount + self.__dead != 5:
+            if not self.__voteReadyList[index]:
+                self.__voteReadyList[index] = True
+                self.__voteReadyCount += 1
 
         if self.__voteReadyCount + self.__dead == 5:
-            self.__voteReadyCount = 0
-            return "0"
+            if not self.__voteReadyRcved[index]:
+                self.__voteReadyRcved[index] = True
+                self.__voteReadyRcvedCount += 1
+
+                if self.__voteReadyRcvedCount + self.__dead == 5:
+                    self.__voteReadyCount = 0
+                    self.__voteReadyRcvedCount = 0
+                    for i in range(5):
+                        self.__voteReadyList[i] = False
+                        self.__voteReadyRcved[i] = False
+
+                return "0"
         else: return "1"
 
     def voteTo(self, index):
