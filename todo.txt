@@ -1,4 +1,2 @@
-1. voting process
-2. special actions of mafia, police, and doctor
-3. ending when game is over
-4. chatting interface
+ending when game is over
+chatting interface

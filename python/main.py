@@ -83,13 +83,18 @@ class Room:
 
         # maximum vote
         self.__voteCount = 0
-        self.__maxVote = []
+        self.__voteOver = False
 
         # dead
         self.__dead = 0
 
         # actions
+        self.__deadJobs = set()
         self.__acts = {}
+        self.__actResult = {}
+        self.__actOver = False
+        self.__actsRcvedCount = 0
+        self.__actsRcved = [False for _ in range(5)]
 
     def userAt(self, index):
         return self.__users[index]
@@ -108,24 +113,31 @@ class Room:
 
     def sendMsg(self, index, msg):
         self.__msgBuffer.append([index, msg])
-
-    def rcvMsgJSON(self, index):
-        if self.__msgRcvCount == 0:
+        if len(self.__msgFlush) == 0:
             self.__msgFlush = self.__msgBuffer
             self.__msgBuffer = []
 
-        if self.__msgRcvList[index]:
+    def rcvMsgJSON(self, index):
+        if self.__msgRcvList[index] or len(self.__msgFlush) == 0:
             return "[]"
-        else:
-            self.__msgRcvCount += 1
-            self.__msgRcvList[index] = True
 
-            if self.__msgRcvCount == 5:
-                self.__msgRcvCount = 0
-                for i in range(5):
-                    self.__msgRcvList[i] = False
+        result = json.dumps(self.__msgFlush, separators=(",", ":"))
 
-            return json.dumps(self.__msgFlush, separators=(",", ":"))
+        self.__msgRcvCount += 1
+        self.__msgRcvList[index] = True
+
+        if self.__msgRcvCount == 5:
+            self.__msgRcvCount = 0
+            for i in range(5):
+                self.__msgRcvList[i] = False
+
+            if len(self.__msgBuffer) > 0:
+                self.__msgFlush = self.__msgBuffer
+                self.__msgBuffer = []
+            else:
+                self.__msgFlush.clear()
+
+        return result
 
     def readyToVote(self, index):
         print("ready to vote: " + str(index))
@@ -152,47 +164,72 @@ class Room:
     def voteTo(self, index):
         self.__users[index].vote()
         self.__voteCount += 1
+        self.__voteOver = False
 
-        if self.__voteCount + self.__dead == 5:
-            for i in range(5):
-                if len(self.__maxVote) == 0:
-                    self.__maxVote.append(i)
-                elif self.__users[self.__maxVote[0]].getVote() == self.__users[i].getVote():
-                    self.__maxVote.append(i)
-                elif self.__users[self.__maxVote[0]].getVote() < self.__users[i].getVote():
-                    self.__maxVote = [i]
+        if self.__voteCount + self.__dead == len(self.__users):
+            max_vote = 0
+            elect = []
+            for user in self.__users:
+                if max_vote == user.getVote():
+                    elect.append(user)
+                elif max_vote < user.getVote():
+                    elect.clear()
+                    elect.append(user)
+                    max_vote = user.getVote()
 
-            for index in self.__maxVote:
-                self.__users[i].die()
-                self.__dead += 1
+            for user in elect:
+                user.die()
+                job = user.getJob()
+                if job != "Citizen":
+                    self.__deadJobs.add(job)
 
             self.__voteCount = 0
-            self.__maxVote = []
+            self.resetVote()
+
+            self.__voteOver = True
 
     def deadListJSON(self):
-        return json.dumps(self.__maxVote, separators=(",", ":"))
+        if self.__voteOver:
+            result = []
+            for i in range(len(self.__users)):
+                if not self.__users[i].alive():
+                    result.append(i)
+            return json.dumps(result, separators=(",", ":"))
+        else:
+            return "1"
 
     def resetVote(self):
         for user in self.__users:
             user.resetVote()
 
     def act(self, index, target):
-        self.__acts[self.__users[index].getJob()] = target
+        self.__actOver = False
+        job = self.__users[index].getJob()
+
+        if job == "Police":
+            self.__actResult["police"] = (self.__users[target].getJob() == "Mafia")
+            print("The police investigated. Did he find the mafia? " + str(self.__actResult["police"]))
+        elif job == "Mafia":
+            if target == self.__acts.get("Doctor"):
+                self.__actResult["victim"] = None
+            else:
+                self.__actResult["victim"] = target
+            self.__acts[job] = target
+            print("The mafia murdered. Who did he kill? " + str(target))
+        elif job == "Doctor":
+            if target == self.__actResult.get("victim"):
+                self.__actResult["victim"] == None
+            self.__acts[job] = target
+            print("The doctor healed. Who did he heal? " + str(target))
+
+        if ("Mafia" in self.__deadJobs or "Mafia" in self.__acts) and ("Doctor" in self.__deadJobs or "Doctor" in self.__acts) and ("Police" in self.__deadJobs or "police" in self.__actResult):
+            self.__acts.clear()
+            self.__actOver = True
+            print("Everyone did their work! What do we have left? " + str(self.__actResult))
 
     def actResult(self, index):
-        if "Mafia" in self.__acts and "Police" in self.__acts and "Doctor" in self.__acts:
-            result = {}
-            mafia = self.__acts["Mafia"]
-            police = self.__acts["Police"]
-            doctor = self.__acts["Doctor"]
-
-            if mafia != doctor:
-                result["victim"] = mafia
-                self.__dead += 1
-            if self.__users[index].getJob() == "Police":
-                result["police"] = (self.__users[police].getJob() == "Mafia")
-
-            return json.dumps(result, separator=(",", ":"))
+        if self.__actOver:
+            return json.dumps(self.__actResult, separators=(",", ":"))
         else:
             return "1"
 
@@ -327,7 +364,7 @@ def voteTo():
     player = int(bottle.request.forms.get("player"))
     id = bottle.request.cookies.get("id")
 
-    if 1 <= player <= 5:
+    if 0 <= player < 5 and ids[id][0].userAt(player).alive():
         print("Voting for {}".format(player))
         ids[id][0].voteTo(player)
         return "0"
@@ -346,6 +383,7 @@ def act():
     print("\Action page requested")
     id = bottle.request.cookies.get("id")
     target = bottle.request.forms.get("target")
+    ids[id][0].act(ids[id][1], int(target))
 
     return "0"
 
