@@ -141,7 +141,7 @@ class Room:
 
     def readyToVote(self, index):
         print("ready to vote: " + str(index))
-        if self.__voteReadyCount + self.__dead != 5:
+        if self.__voteReadyCount + self.__dead < 5:
             if not self.__voteReadyList[index]:
                 self.__voteReadyList[index] = True
                 self.__voteReadyCount += 1
@@ -179,6 +179,7 @@ class Room:
 
             for user in elect:
                 user.die()
+                self.__dead += 1
                 job = user.getJob()
                 if job != "Citizen":
                     self.__deadJobs.add(job)
@@ -190,10 +191,19 @@ class Room:
 
     def deadListJSON(self):
         if self.__voteOver:
-            result = []
+            result = {"deads": []}
+
             for i in range(len(self.__users)):
                 if not self.__users[i].alive():
-                    result.append(i)
+                    result["deads"].append(i)
+
+            if "Mafia" in self.__deadJobs:
+                result["winner"] = "Justice"
+            elif len(self.__users) - self.__dead == 2:
+                result["winner"] = "Mafia"
+            else:
+                result["winner"] = None
+
             return json.dumps(result, separators=(",", ":"))
         else:
             return "1"
@@ -214,17 +224,33 @@ class Room:
                 self.__actResult["victim"] = None
             else:
                 self.__actResult["victim"] = target
+                self.__dead += 1
+                job = self.__users[target].getJob()
+                if job != "Citizen":
+                    self.__deadJobs.add(job)
             self.__acts[job] = target
             print("The mafia murdered. Who did he kill? " + str(target))
         elif job == "Doctor":
             if target == self.__actResult.get("victim"):
-                self.__actResult["victim"] == None
+                self.__actResult["victim"] = None
+                self.__dead -= 1
+                job = self.__users[target].getJob()
+                if job != "Citizen":
+                    self.__deadJobs.remove(job)
             self.__acts[job] = target
             print("The doctor healed. Who did he heal? " + str(target))
 
         if ("Mafia" in self.__deadJobs or "Mafia" in self.__acts) and ("Doctor" in self.__deadJobs or "Doctor" in self.__acts) and ("Police" in self.__deadJobs or "police" in self.__actResult):
             self.__acts.clear()
             self.__actOver = True
+
+            if self.__users[self.__actResult["victim"]].getJob() == "Mafia":
+                self.__actResult["winner"] == "Justice"
+            elif len(self.__users) - self.__dead == 2:
+                self.__actResult["winner"] = "Mafia"
+            else:
+                self.__actResult["winner"] = None
+
             print("Everyone did their work! What do we have left? " + str(self.__actResult))
 
     def actResult(self, index):
@@ -314,42 +340,15 @@ def day():
 # chatting
 @app.post("/sendMsg")
 def sendMsg():
-    print("Message send requested")
     msg = bottle.request.forms.get("msg")
     id = bottle.request.cookies.get("id")
-
-    print("sendMsg called from room {} index {}.".format(ids[id][0], ids[id][1]))
-    print("Message receive count:", ids[id][0].getMsgRcvCount())
-    print("Message receive list:", ids[id][0].getMsgRcvList())
-    print("Message buffer:", ids[id][0].getMsgBuffer())
-    print("Message flush:", ids[id][0].getMsgFlush())
     ids[id][0].sendMsg(ids[id][1], msg)
-    print("Sent the following message:", msg)
-    print("Message receive count:", ids[id][0].getMsgRcvCount())
-    print("Message receive list:", ids[id][0].getMsgRcvList())
-    print("Message buffer:", ids[id][0].getMsgBuffer())
-    print("Message flush:", ids[id][0].getMsgFlush())
-    print()
     return "0"
 
 @app.post("/rcvMsg")
 def rcvMsg():
-    print("Message receive requested")
     id = bottle.request.cookies.get("id")
-
-    print("rcvMsg called from room {} index {}.".format(ids[id][0], ids[id][1]))
-    print("Message receive count:", ids[id][0].getMsgRcvCount())
-    print("Message receive list:", ids[id][0].getMsgRcvList())
-    print("Message buffer:", ids[id][0].getMsgBuffer())
-    print("Message flush:", ids[id][0].getMsgFlush())
-    result = ids[id][0].rcvMsgJSON(ids[id][1]) # <Room>.rcvMsgJSON(<Index>)
-    print("Received the following message:", result)
-    print("Message receive count:", ids[id][0].getMsgRcvCount())
-    print("Message receive list:", ids[id][0].getMsgRcvList())
-    print("Message buffer:", ids[id][0].getMsgBuffer())
-    print("Message flush:", ids[id][0].getMsgFlush())
-    print()
-    return result
+    return ids[id][0].rcvMsgJSON(ids[id][1]) # <Room>.rcvMsgJSON(<Index>)
 
 # vote - page where people vote
 @app.post("/readyToVote")

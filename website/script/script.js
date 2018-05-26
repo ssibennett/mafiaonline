@@ -30,12 +30,17 @@ var MAFIA_ONLINE = {
 
     MAFIA_ONLINE.$title.text("Mafia Game - Day");
     MAFIA_ONLINE.$voteAction.text("Ready");
-    MAFIA_ONLINE.$action.text("vote");
+    MAFIA_ONLINE.$action.text("vote").css("text-decoration-line", "none");
     MAFIA_ONLINE.$body.css("background-color", MAFIA_ONLINE.bgColor.day);
 
-    // If dead, disable all the player buttons
     if (!MAFIA_ONLINE.imAlive()) {
       MAFIA_ONLINE.$playerList.find("button").attr("disabled", "disabled");
+    } else if (MAFIA_ONLINE.JOB === "Citizen") {
+      for (var i = 0; i < 5; i++) {
+        if (MAFIA_ONLINE.alive[i]) {
+          MAFIA_ONLINE.$playerList.find("button").eq(i).removeAttr("disabled");
+        }
+      }
     }
 
     // Event-handler for sending message
@@ -109,6 +114,7 @@ var MAFIA_ONLINE = {
     // Ready for Voting
     function readyToVote() {
       MAFIA_ONLINE.$readyToVote.off();
+      alert("You are ready to vote.");
 
       // Ping
       var readyToVote = setInterval(function() {
@@ -137,8 +143,6 @@ var MAFIA_ONLINE = {
     if (MAFIA_ONLINE.imAlive()) {
       MAFIA_ONLINE.$readyToVote.appendTo(MAFIA_ONLINE.$actionH2);
       MAFIA_ONLINE.$readyToVote.click(readyToVote);
-    } else {
-      readyToVote();
     }
   },
 
@@ -156,7 +160,7 @@ var MAFIA_ONLINE = {
       MAFIA_ONLINE.$playerList.find("button").click(function() {
         var $this = $(this);
         var player = MAFIA_ONLINE.$playerList.find("button").index(this);
-        alert("Voted for " + player);
+        alert(`Voted for Player ${player + 1}.`);
 
         $.ajax({
           method: "POST",
@@ -177,22 +181,28 @@ var MAFIA_ONLINE = {
                     dataType: "json",
                     success: (data, status, xhr) => {
                       if (data != 1) {
-                        for (var i = 0; i < data.length; i++) {
-                          MAFIA_ONLINE.alive[data[i]] = false;
-                          MAFIA_ONLINE.$playerList.find("button").eq(data[i])
+                        clearInterval(execute);
+
+                        for (var i = 0; i < data.deads.length; i++) {
+                          MAFIA_ONLINE.alive[data.deads[i]] = false;
+                          MAFIA_ONLINE.$playerList.find("button").eq(data.deads[i])
                               .attr("disabled", "disabled")
                               .css("text-decoration", "line-through");
 
-                          if (data[i] === MAFIA_ONLINE.INDEX) {
+                          if (data.deads[i] === MAFIA_ONLINE.INDEX) {
                             MAFIA_ONLINE.$playerList.find("button")
                                 .attr("disabled", "disabled");
+                            MAFIA_ONLINE.$action.css("text-decoration-line", "line-through");
                             alert("You are executed.");
                           }
                         }
 
-                        clearInterval(execute);
-
-                        MAFIA_ONLINE.night();
+                        if (data.winner === null) {
+                          MAFIA_ONLINE.night();
+                        } else {
+                          $("*").off();
+                          alert(`${data.winner} won!!!`);
+                        }
                       }
                     }
                   });
@@ -229,6 +239,7 @@ var MAFIA_ONLINE = {
           MAFIA_ONLINE.$action.text("Save");
           break;
         case "Citizen":
+          MAFIA_ONLINE.$action.css("text-decoration-line", "line-through");
           MAFIA_ONLINE.$playerList.find("button").attr("disabled", "disabled");
           alert("You are a citizen, so you can't do anything now.");
           break;
@@ -238,6 +249,24 @@ var MAFIA_ONLINE = {
 
       MAFIA_ONLINE.$playerList.find("button").click(function() {
         var target = MAFIA_ONLINE.$playerList.find("button").index(this);
+
+        var msg = `You chose Player ${target + 1} to `;
+
+        switch (MAFIA_ONLINE.JOB) {
+          case "Mafia":
+            msg += "kill.";
+            break;
+          case "Police":
+            msg += "investigate.";
+            break;
+          case "Doctor":
+            msg += "save.";
+            break;
+          default:
+            msg = "You're not supposed to click that button!";
+        }
+
+        alert(msg);
 
         $.ajax({
           method: "POST",
@@ -250,6 +279,8 @@ var MAFIA_ONLINE = {
               console.log("Error in action!");
               return;
             }
+
+            MAFIA_ONLINE.$playerList.find("button").off();
 
             var actResult = setInterval(function() {
               $.ajax({
@@ -288,7 +319,12 @@ var MAFIA_ONLINE = {
                       }
                     }
 
-                    MAFIA_ONLINE.day();
+                    if (data.winner === null) {
+                      MAFIA_ONLINE.day();
+                    } else {
+                      $("*").off();
+                      alert(`${data.winner} won!!!`);
+                    }
                   }
                 }
               });
@@ -314,13 +350,20 @@ var MAFIA_ONLINE = {
                   MAFIA_ONLINE.$playerList.find("button").eq(data.victim)
                       .attr("disabled", "disabled")
                       .css("text-decoration", "line-through");
+
+                  if (data.victim === MAFIA_ONLINE.INDEX) {
+                    MAFIA_ONLINE.$playerList.find("button")
+                        .attr("disabled", "disabled");
+                    MAFIA_ONLINE.$action.css("text-decoration-line", "line-through");
+                    alert("You are murdered.");
+                  }
                 }
 
-                if (MAFIA_ONLINE.JOB == "Police" && data.police === true) {
-                  alert("You found a Mafia.");
+                if (data.winner === null) {
+                  MAFIA_ONLINE.day();
+                } else {
+                  alert(`${data.winner} won!!!`);
                 }
-
-                MAFIA_ONLINE.day();
               }
             }
           });
